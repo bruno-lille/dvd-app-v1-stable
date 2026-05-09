@@ -1,4 +1,4 @@
-#⚙️ 🟢 FONDATIONS app_dev -avant modif Home.py soft => APP_dev_v1 stable.py
+#⚙️ 🟢 FONDATIONS app_dev -avant modif Home.py soft => APP_dev_v1 stable.py = test deploy
 #01--IMPORTS CORE
 
 import os
@@ -607,7 +607,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-10_00-03-54"
+APP_BUILD = "2026-05-10_00-23-32"
 APP_NOTE = "dev en cours"
 
 

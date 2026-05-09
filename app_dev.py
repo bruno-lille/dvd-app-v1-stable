@@ -1,4 +1,4 @@
-#⚙️ 🟢 FONDATIONS app_dev -avant modif Home.py soft => APP_dev_v1 stable.py
+#⚙️ 🟢 FONDATIONS app_dev -avant modif Home.py soft => APP_dev_v1 stable.py = test deploy
 #01--IMPORTS CORE
 
 import os
