@@ -19,3 +19,10 @@ backups/
 archives/
 obsolete/
 analyse/
+
+local_backups/
+*.zip
+*.lnk
+*.url
+
+films.db
