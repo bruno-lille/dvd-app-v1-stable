@@ -464,15 +464,7 @@ def get_style():
     return """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <script>
-    window.onload = function() {
-        let input = document.getElementById("title");
-        if (input) {
-            input.focus();
-            input.select();
-        }
-    }
-    </script>
+
   
     <script>
     function smartPaste(input) {
@@ -615,7 +607,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-09_18-16-57"
+APP_BUILD = "2026-05-09_18-37-31"
 APP_NOTE = "dev en cours"
 
 
@@ -913,11 +905,11 @@ def home():
             <input name="allocine"
                    value="https://www.google.com/search?q={query_encoded}+allocine"
                    placeholder="🔗 Allociné"
-                   onclick="smartPaste(this)"><br><br>
+                   onfocus="smartPaste(this)"><br><br>
 
             <input name="tmdb_input"
                    placeholder="ID ou lien TMDB"
-                   onclick="smartPaste(this)"><br><br>
+                   onfocus="smartPaste(this)"><br><br>
 
             <div class="btn-row">
                 <a class="btn allocine" href="https://www.google.com/search?q={query_encoded}+allocine+film" target="_blank">
@@ -1370,8 +1362,9 @@ def add_movie(tmdb_id):
 
 
 
-            <input name="allocine" 
-                  value="https://www.google.com/search?q={query_allocine}">
+            <input name="allocine"
+               value="https://www.google.com/search?q={query_allocine}"
+               onclick="smartPaste(this)">
 
             <div class="btn-row">
                 <a class="btn allocine" 
@@ -1598,11 +1591,16 @@ def prefill(disc_id, tmdb_id):
 
             <input name="type" value="{type_disc}" placeholder="📀 Type (DVD/BLURAY)"><br><br>
 
-            <input name="allocine" value="{allocine}" placeholder="🔗 Allociné"><br><br>
+            <input name="allocine"
+                   value="https://www.google.com/search?q={query_encoded}+allocine"
+                   placeholder="🔗 Allociné"
+                   onclick="smartPaste(this)"><br><br>
 
             <input name="ordre" value="{ordre}" placeholder="🔢 Ordre" type="number" min="1"><br><br>
 
-            <input id="tmdb_input" name="tmdb_input" value="{tmdb_id}" placeholder="ID ou lien TMDB">
+            <input name="tmdb_input"
+                   placeholder="ID ou lien TMDB"
+                   onclick="smartPaste(this)"><br><br>
 
             <button class="btn new">✅ Valider</button>
 
