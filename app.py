@@ -150,7 +150,7 @@ def restore_db():
 
     try:
         token = GITHUB_TOKEN
-        repo = "bruno-lille/repo"
+        repo = "bruno-lille/dvd-app-v1-stable"
 
         if not token or not repo:
             print("❌ Variables GitHub manquantes")
@@ -607,7 +607,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-10_00-23-32"
+APP_BUILD = "2026-05-10_01-01-56"
 APP_NOTE = "dev en cours"
 
 

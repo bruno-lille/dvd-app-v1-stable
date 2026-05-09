@@ -150,7 +150,7 @@ def restore_db():
 
     try:
         token = GITHUB_TOKEN
-        repo = "bruno-lille/repo"
+        repo = "bruno-lille/dvd-app-v1-stable"
 
         if not token or not repo:
             print("❌ Variables GitHub manquantes")
