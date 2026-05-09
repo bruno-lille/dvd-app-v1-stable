@@ -475,22 +475,8 @@ def get_style():
     </script>
   
     <script>
-    async function smartPaste(input) {
-
-        // sélectionner tout le texte
+    function smartPaste(input) {
         input.select();
-
-        try {
-            // tentative de lecture du presse-papier
-            const text = await navigator.clipboard.readText();
-
-            if (text && text.startsWith("http")) {
-                input.value = text;
-            }
-
-        } catch (err) {
-            // fallback → rien (iPhone va juste sélectionner)
-        }
     }
     </script>
     
@@ -629,7 +615,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-07_22-40-10"
+APP_BUILD = "2026-05-09_17-38-27"
 APP_NOTE = "dev en cours"
 
 

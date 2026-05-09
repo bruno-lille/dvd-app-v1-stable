@@ -475,22 +475,8 @@ def get_style():
     </script>
   
     <script>
-    async function smartPaste(input) {
-
-        // sélectionner tout le texte
+    function smartPaste(input) {
         input.select();
-
-        try {
-            // tentative de lecture du presse-papier
-            const text = await navigator.clipboard.readText();
-
-            if (text && text.startsWith("http")) {
-                input.value = text;
-            }
-
-        } catch (err) {
-            // fallback → rien (iPhone va juste sélectionner)
-        }
     }
     </script>
     
