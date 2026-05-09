@@ -607,7 +607,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-09_18-37-31"
+APP_BUILD = "2026-05-10_00-03-54"
 APP_NOTE = "dev en cours"
 
 
@@ -775,6 +775,13 @@ def home():
             filtered.append(row)
 
     results = [r for r in filtered if r["titre"]]
+    results.sort(
+        key=lambda r: (
+            normalize(r["titre"]) != q_norm,
+            not normalize(r["titre"]).startswith(q_norm),
+            r["titre"]
+        )
+    )
 
     # =========================
     # 🎯 SI RESULTATS

@@ -775,6 +775,13 @@ def home():
             filtered.append(row)
 
     results = [r for r in filtered if r["titre"]]
+    results.sort(
+        key=lambda r: (
+            normalize(r["titre"]) != q_norm,
+            not normalize(r["titre"]).startswith(q_norm),
+            r["titre"]
+        )
+    )
 
     # =========================
     # 🎯 SI RESULTATS
