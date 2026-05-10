@@ -265,8 +265,12 @@ def load_data():
     cursor.execute("""
     SELECT * FROM films
     ORDER BY
-        CASE WHEN ordre IS NULL THEN 999999 ELSE ordre END ASC,
-        annee ASC
+        CASE
+            WHEN ordre IS NULL OR ordre = ''
+            THEN 999999
+            ELSE CAST(ordre AS INTEGER)
+        END ASC,
+        annee DESC
     """)
     rows = cursor.fetchall()
 
@@ -779,6 +783,7 @@ def home():
         key=lambda r: (
             normalize(r["titre"]) != q_norm,
             not normalize(r["titre"]).startswith(q_norm),
+            safe_int(r["ordre"], 999999),
             r["titre"]
         )
     )

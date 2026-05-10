@@ -265,8 +265,12 @@ def load_data():
     cursor.execute("""
     SELECT * FROM films
     ORDER BY
-        CASE WHEN ordre IS NULL THEN 999999 ELSE ordre END ASC,
-        annee ASC
+        CASE
+            WHEN ordre IS NULL OR ordre = ''
+            THEN 999999
+            ELSE CAST(ordre AS INTEGER)
+        END ASC,
+        annee DESC
     """)
     rows = cursor.fetchall()
 
@@ -607,7 +611,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-10_01-01-56"
+APP_BUILD = "2026-05-10_20-59-12"
 APP_NOTE = "dev en cours"
 
 
@@ -779,6 +783,7 @@ def home():
         key=lambda r: (
             normalize(r["titre"]) != q_norm,
             not normalize(r["titre"]).startswith(q_norm),
+            safe_int(r["ordre"], 999999),
             r["titre"]
         )
     )
