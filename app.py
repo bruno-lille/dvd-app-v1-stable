@@ -611,7 +611,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-10_20-59-12"
+APP_BUILD = "2026-05-10_21-40-37"
 APP_NOTE = "dev en cours"
 
 
@@ -781,9 +781,9 @@ def home():
     results = [r for r in filtered if r["titre"]]
     results.sort(
         key=lambda r: (
+            safe_int(r["ordre"], 999999),
             normalize(r["titre"]) != q_norm,
             not normalize(r["titre"]).startswith(q_norm),
-            safe_int(r["ordre"], 999999),
             r["titre"]
         )
     )
@@ -824,9 +824,18 @@ def home():
                 <div>{row["casting"]}</div>
 
                 <div class="btn-row">
-                    <a class="btn allocine" href="{row["allocine"]}" target="_blank">Allociné</a>
-                    <a class="btn update" href="/suggest_update/{row["disc_id"]}?q={urllib.parse.quote(query_raw)}">🔄 Corriger</a>
-                    <a class="btn new" href="/delete/{row["disc_id"]}" onclick="return confirm('Supprimer ce film ?')">
+                    <a class="btn allocine" href="{row["allocine"]}" target="_blank">
+                        Allociné
+                    </a>
+
+                    <a class="btn update"
+                       href="/suggest_update/{row["disc_id"]}?q={urllib.parse.quote(query_raw)}&mode={mode}">
+                        ✏️ Modifier
+                    </a>
+
+                    <a class="btn new"
+                       href="/delete/{row["disc_id"]}"
+                       onclick="return confirm('Supprimer ce film ?')">
                         🗑 Supprimer
                     </a>
                 </div>
@@ -1009,6 +1018,7 @@ def suggest_update(disc_id):
     print("DISC_ID REÇU =", disc_id)
 
     query = request.args.get("q", "")
+    mode = request.args.get("mode", "")
     query_encoded = urllib.parse.quote(query)
     
 
@@ -1065,7 +1075,7 @@ def suggest_update(disc_id):
     <div class="card">
         <h3>✏️ Modifier complètement</h3>
 
-        <form action="/manual_update/{disc_id}?q={query_encoded}" method="post">
+        <form action="/manual_update/{disc_id}?q={query_encoded}&mode={mode}" method="post">
         
             
             <div style="margin-bottom:10px; font-size:13px; color:#888;">
@@ -1184,12 +1194,12 @@ def suggest_update(disc_id):
             <div class="btn-row">
 
                 <button type="button" class="btn update"
-                    onclick="window.location.href='/confirm_update/{disc_id}/{film['id']}?q={query_encoded}&title=1'">
+                    onclick="window.location.href='/confirm_update/{disc_id}/{film['id']}?q={query_encoded}&mode={mode}&title=1'">
                     ⚡ Tout remplir (titre inclus)
                 </button>
 
                 <button type="button" class="btn allocine"
-                    onclick="window.location.href='/confirm_update/{disc_id}/{film['id']}?q={query_encoded}&title=0'">
+                    onclick="window.location.href='/confirm_update/{disc_id}/{film['id']}?q={query_encoded}&mode={mode}&title=0'">
                     🧠 Garder le titre actuel
                 </button>
 
@@ -1251,7 +1261,8 @@ def confirm_update(disc_id, tmdb_id, query=""):
     reset_cache()
 
     query = request.args.get("q", "")
-    return redirect(f"/?q={query}")
+    mode = request.args.get("mode", "")
+    return redirect(f"/?q={query}&mode={mode}")
     
 #23 — UPDATE MANUEL
 @app.route("/manual_update/<disc_id>", methods=["POST"])
@@ -1309,6 +1320,7 @@ def manual_update(disc_id):
     tmdb_id = extract_tmdb_id(raw) if raw else None
 
     query = request.args.get("q", "")
+    mode = request.args.get("mode", "")
 
     if tmdb_id:
         
@@ -1316,7 +1328,7 @@ def manual_update(disc_id):
         return confirm_update(disc_id, int(tmdb_id), query)
 
     
-    return redirect(f"/?q={query}")
+    return redirect(f"/?q={query}&mode={mode}")
     
 #24 — ADD FILM
 #ancien13 ----------- PAGE AJOUT FILM -----------
