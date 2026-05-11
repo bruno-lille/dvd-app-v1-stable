@@ -613,7 +613,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-11_08-47-05"
+APP_BUILD = "2026-05-11_08-53-34"
 APP_NOTE = "dev en cours"
 
 
@@ -1929,10 +1929,10 @@ def download_excel():
 @app.route("/download_all")
 def download_all():
 
-    key = request.args.get("key", "")
+    #key = request.args.get("key", "")
 
-    if key != ADMIN_KEY:
-        return "⛔ accès interdit"
+    #if key != ADMIN_KEY:
+        #return "⛔ accès interdit"
     
     # 🔥 backup GitHub avant download
     try:

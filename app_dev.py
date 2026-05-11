@@ -1929,10 +1929,10 @@ def download_excel():
 @app.route("/download_all")
 def download_all():
 
-    key = request.args.get("key", "")
+    #key = request.args.get("key", "")
 
-    if key != ADMIN_KEY:
-        return "⛔ accès interdit"
+    #if key != ADMIN_KEY:
+        #return "⛔ accès interdit"
     
     # 🔥 backup GitHub avant download
     try:
