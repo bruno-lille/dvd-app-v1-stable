@@ -2008,7 +2008,7 @@ def upload_db():
     if key != ADMIN_KEY:
         return "⛔ accès interdit"
 
-    from flask import request
+    
 
     file = request.files.get("file")
 

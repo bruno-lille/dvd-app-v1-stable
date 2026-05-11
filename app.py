@@ -613,7 +613,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-11_08-42-04"
+APP_BUILD = "2026-05-11_08-47-05"
 APP_NOTE = "dev en cours"
 
 
@@ -2008,7 +2008,7 @@ def upload_db():
     if key != ADMIN_KEY:
         return "⛔ accès interdit"
 
-    from flask import request
+    
 
     file = request.files.get("file")
 
