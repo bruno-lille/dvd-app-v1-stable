@@ -1992,9 +1992,6 @@ def download_all():
 @app.route("/upload_db", methods=["POST"])
 def upload_db():
 
-    #if ENV != "DEV":
-        #return "⛔ accès interdit"
-
     from flask import request
     import sqlite3
 
@@ -2010,7 +2007,6 @@ def upload_db():
 
     file.save(temp_path)
 
-    # 🔐 vérification DB valide
     try:
         conn = sqlite3.connect(temp_path)
         cursor = conn.cursor()
@@ -2018,6 +2014,7 @@ def upload_db():
         conn.close()
 
     except Exception as e:
+
         print("❌ DB invalide :", e)
 
         if os.path.exists(temp_path):
@@ -2025,18 +2022,10 @@ def upload_db():
 
         return "❌ DB invalide"
 
-    # 🔥 sécurité taille minimale
     if os.path.getsize(temp_path) < 1000:
 
         os.remove(temp_path)
         return "❌ Fichier invalide"
-
-    # 🔥 backup auto AVANT remplacement
-    try:
-        backup_db()
-
-    except Exception as e:
-        print("⚠️ backup auto échoué :", e)
 
     # 🔥 remplacement sécurisé
     os.replace(temp_path, DB_PATH)
@@ -2044,7 +2033,7 @@ def upload_db():
     reset_cache()
 
     return """
-    <h2>✅ Base remplacée</h2>
+    <h2>✅ Base restaurée</h2>
 
     <div class="card">
         <a class="btn allocine" href="/">🏠 Retour accueil</a>
