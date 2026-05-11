@@ -611,7 +611,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-11_10-19-13"
+APP_BUILD = "2026-05-11_10-30-13"
 APP_NOTE = "dev en cours"
 
 
@@ -1996,6 +1996,7 @@ def upload_db():
         #return "⛔ accès interdit"
 
     from flask import request
+    import sqlite3
 
     file = request.files.get("file")
 
@@ -2008,25 +2009,34 @@ def upload_db():
     temp_path = DB_PATH + ".upload"
 
     file.save(temp_path)
-    
-    # 🔐 vérification DB valide
-    import sqlite3
 
+    # 🔐 vérification DB valide
     try:
         conn = sqlite3.connect(temp_path)
         cursor = conn.cursor()
         cursor.execute("SELECT 1 FROM films LIMIT 1")
         conn.close()
-    except:
-        os.remove(temp_path)
+
+    except Exception as e:
+        print("❌ DB invalide :", e)
+
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
         return "❌ DB invalide"
 
     # 🔥 sécurité taille minimale
     if os.path.getsize(temp_path) < 1000:
+
         os.remove(temp_path)
         return "❌ Fichier invalide"
 
-    requests.get("https://dvd-app-v1-stable.onrender.com/backup_db")
+    # 🔥 backup auto AVANT remplacement
+    try:
+        backup_db()
+
+    except Exception as e:
+        print("⚠️ backup auto échoué :", e)
 
     # 🔥 remplacement sécurisé
     os.replace(temp_path, DB_PATH)
@@ -2035,7 +2045,10 @@ def upload_db():
 
     return """
     <h2>✅ Base remplacée</h2>
-    <a href="/">⬅️ Retour</a>
+
+    <div class="card">
+        <a class="btn allocine" href="/">🏠 Retour accueil</a>
+    </div>
     """
             
 #30 — HEALTH
