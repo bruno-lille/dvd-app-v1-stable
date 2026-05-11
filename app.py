@@ -15,8 +15,6 @@ from openpyxl import Workbook
 from dotenv import load_dotenv
 import os
 
-ADMIN_KEY = os.getenv("ADMIN_KEY", "2024")
-
 load_dotenv()
 
 #02--IMPORTS WEB
@@ -613,7 +611,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-11_08-53-34"
+APP_BUILD = "2026-05-11_09-52-46"
 APP_NOTE = "dev en cours"
 
 
@@ -704,18 +702,12 @@ def home():
         html += f"""
         <div class="card" style="position:fixed; bottom:20px; left:10px; right:10px;">
 
-            <a class="btn allocine"
-                href="/download_all?key=dvd2026"
+            <a class="btn allocine" href="/download_all"
                 style="display:block; width:100%; height:48px; margin-bottom:10px; text-align:center;">
                 💾 Télécharger la base
             </a>
 
             <form action="/upload_db" method="post" enctype="multipart/form-data">
-            
-                <input type="password"
-                       name="key"
-                       placeholder="Code admin"
-                       style="width:100%; margin-bottom:8px;">
 
                 <input type="file" id="fileInput" name="file" accept=".db"
                        style="display:none;"
@@ -1928,11 +1920,6 @@ def download_excel():
 #29D — DOWNLOAD ALL (ZIP)
 @app.route("/download_all")
 def download_all():
-
-    #key = request.args.get("key", "")
-
-    #if key != ADMIN_KEY:
-        #return "⛔ accès interdit"
     
     # 🔥 backup GitHub avant download
     try:
@@ -2003,12 +1990,10 @@ def download_all():
 @app.route("/upload_db", methods=["POST"])
 def upload_db():
 
-    key = request.form.get("key")
+    #if ENV != "DEV":
+        #return "⛔ accès interdit"
 
-    if key != ADMIN_KEY:
-        return "⛔ accès interdit"
-
-    
+    from flask import request
 
     file = request.files.get("file")
 
