@@ -1701,7 +1701,7 @@ def backup_db():
 
 
     token = GITHUB_TOKEN
-    repo = "bruno-lille/repo"
+    repo = "bruno-lille/dvd-app-v1-stable"
 
     headers = {
         "Authorization": f"token {token}"
@@ -2024,7 +2024,7 @@ def upload_db():
         os.remove(temp_path)
         return "❌ Fichier invalide"
 
-    requests.get("https://ton-app.onrender.com/backup_db")
+    requests.get("https://dvd-app-v1-stable.onrender.com/backup_db")
 
     # 🔥 remplacement sécurisé
     os.replace(temp_path, DB_PATH)
