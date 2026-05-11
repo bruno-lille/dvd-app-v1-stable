@@ -1920,24 +1920,22 @@ def download_excel():
 #29D — DOWNLOAD ALL (ZIP)
 @app.route("/download_all")
 def download_all():
-    
-    # 🔥 backup GitHub avant download
+
     try:
         backup_db()
     except Exception as e:
         print("⚠️ backup auto échoué :", e)
 
     import sqlite3
-    from flask import send_file
     from openpyxl import Workbook
     import zipfile
+    import shutil
 
     if not os.path.exists(DB_PATH):
         return "❌ DB introuvable"
 
     now = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
 
-    # 🔹 noms fichiers
     db_name = f"Films_{now}.db"
     excel_name = f"Films_{now}.xlsx"
     zip_name = f"Films_{now}.zip"
@@ -1946,11 +1944,8 @@ def download_all():
     excel_temp = os.path.join(BASE_DIR, excel_name)
     zip_path = os.path.join(BASE_DIR, zip_name)
 
-    # 🔹 copier DB
-    import shutil
     shutil.copyfile(DB_PATH, db_temp)
 
-    # 🔹 créer Excel
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -1971,19 +1966,26 @@ def download_all():
 
     wb.save(excel_temp)
 
-    # 🔹 créer ZIP
     with zipfile.ZipFile(zip_path, 'w') as zipf:
         zipf.write(db_temp, db_name)
         zipf.write(excel_temp, excel_name)
 
-    # 🔹 nettoyage des fichiers temporaires
-    os.remove(db_temp)
-    os.remove(excel_temp)
+    @after_this_request
+    def cleanup(response):
+        try:
+            os.remove(db_temp)
+            os.remove(excel_temp)
+            os.remove(zip_path)
+        except Exception as e:
+            print("⚠️ cleanup erreur:", e)
+
+        return response
 
     return send_file(
         zip_path,
         as_attachment=True,
-        download_name=zip_name
+        download_name=zip_name,
+        mimetype="application/zip"
     )
             
 #29E — UPLOAD DB
