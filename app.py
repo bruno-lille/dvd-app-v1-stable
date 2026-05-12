@@ -9,7 +9,7 @@ import unicodedata
 import re
 import time
 import html as html_lib
-from datetime import datetime
+from datetime import datetime, timedelta
 from openpyxl import Workbook
 
 from dotenv import load_dotenv
@@ -611,7 +611,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-12_11-12-28"
+APP_BUILD = "2026-05-12_11-51-49"
 APP_NOTE = "dev en cours"
 
 
@@ -1735,7 +1735,7 @@ def backup_db():
         content = base64.b64encode(raw).decode()
 
         # 🔥 4. Upload GitHub
-        now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        now = (datetime.utcnow() + timedelta(hours=2)).strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"backups/films_{now}.db"
 
         url = f"https://api.github.com/repos/{repo}/contents/{filename}"
@@ -1863,7 +1863,7 @@ def download_db():
     if not os.path.exists(DB_PATH):
         return "❌ DB introuvable"
 
-    now = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
+    now = (datetime.utcnow() + timedelta(hours=2)).strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"Films_{now}.db"
 
     return send_file(
@@ -1905,7 +1905,7 @@ def download_excel():
     conn.close()
 
     # 🔥 horodatage
-    now = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
+    now = (datetime.utcnow() + timedelta(hours=2)).strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"Films_{now}.xlsx"
 
     file_path = os.path.join(BASE_DIR, filename)
@@ -1934,7 +1934,7 @@ def download_all():
     if not os.path.exists(DB_PATH):
         return "❌ DB introuvable"
 
-    now = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
+    now = (datetime.utcnow() + timedelta(hours=2)).strftime("%Y-%m-%d_%H-%M-%S")
 
     db_name = f"Films_{now}.db"
     excel_name = f"Films_{now}.xlsx"
