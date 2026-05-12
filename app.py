@@ -18,7 +18,7 @@ import os
 load_dotenv()
 
 #02--IMPORTS WEB
-from flask import Flask, request, redirect, send_file
+from flask import Flask, request, redirect, send_file, after_this_request
 
 #03--CONFIG GLOBALE
 
@@ -611,7 +611,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-11_10-42-36"
+APP_BUILD = "2026-05-12_10-02-17"
 APP_NOTE = "dev en cours"
 
 

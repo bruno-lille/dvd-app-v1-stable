@@ -18,7 +18,7 @@ import os
 load_dotenv()
 
 #02--IMPORTS WEB
-from flask import Flask, request, redirect, send_file
+from flask import Flask, request, redirect, send_file, after_this_request
 
 #03--CONFIG GLOBALE
 
