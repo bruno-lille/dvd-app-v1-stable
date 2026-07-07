@@ -111,122 +111,153 @@ def mark_cleanup():
         
 #07 — RESTORE DB
 
-def get_latest_backup(files, headers):
 
-    latest_file = None
-    latest_date = None
+def db_is_valid():
+    """Vérifie que films.db existe et contient bien la table films."""
+    import sqlite3
 
-    for f in files:
+    if not os.path.exists(DB_PATH):
+        return False
 
-        try:
-            url = f["git_url"]
-            r = requests.get(url, headers=headers, timeout=5)
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
 
-            if r.status_code != 200:
-                continue
+        cursor.execute("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type='table' AND name='films'
+        """)
 
-            data = r.json()
+        result = cursor.fetchone()
+        conn.close()
 
-            # 🔐 sécurisation accès date
-            date = data.get("committer", {}).get("date")
+        return result is not None
 
-            if not date:
-                continue
-
-            if not latest_date or date > latest_date:
-                latest_date = date
-                latest_file = f
-
-        except Exception as e:
-            print("⚠️ erreur fichier backup :", e)
-            continue
-
-    return latest_file
+    except Exception as e:
+        print("❌ Vérification DB impossible :", e)
+        return False
 
 
 def restore_db():
-    
+
     print("🔥 RESTORE déclenché")
 
-    try:
-        token = GITHUB_TOKEN
-        repo = "bruno-lille/dvd-app-v1-stable"
+    token = GITHUB_TOKEN
+    repo = "bruno-lille/dvd-app-v1-stable"
 
-        if not token or not repo:
-            print("❌ Variables GitHub manquantes")
-            return
+    if not token:
+        print("❌ GITHUB_TOKEN manquant")
+        return False
 
-        headers = {
-            "Authorization": f"token {token}"
-        }
+    headers = {
+        "Authorization": f"token {token}"
+    }
 
-        # 📥 récupérer les backups
-        url = f"https://api.github.com/repos/{repo}/contents/backups"
-        r = requests.get(url, headers=headers, timeout=5)
+    url = f"https://api.github.com/repos/{repo}/contents/backups"
 
-        if r.status_code != 200:
-            print("❌ Impossible de récupérer les backups")
-            return
+    # 🔁 3 tentatives en cas de problème réseau
+    for tentative in range(1, 4):
 
-        files = r.json()
+        try:
+            print(f"📡 Tentative restore {tentative}/3")
 
-        # 🔥 garder uniquement les .db
-        db_files = [f for f in files if f["name"].endswith(".db")]
+            r = requests.get(url, headers=headers, timeout=15)
+            r.raise_for_status()
 
-        if not db_files:
-            print("❌ Aucun backup .db trouvé")
-            return
+            files = r.json()
 
-        latest = sorted(db_files, key=lambda x: x["name"], reverse=True)[0]
+            db_files = [
+                f for f in files
+                if f["name"].startswith("films_")
+                and f["name"].endswith(".db")
+            ]
 
-        download_url = latest["download_url"]
+            if not db_files:
+                print("❌ Aucun backup .db trouvé")
+                return False
 
-        r = requests.get(download_url, timeout=5)
+            latest = sorted(
+                db_files,
+                key=lambda x: x["name"],
+                reverse=True
+            )[0]
 
-        if r.status_code != 200:
-            print("❌ Erreur téléchargement DB")
-            return
+            print("📥 Backup sélectionné :", latest["name"])
 
-        # 🔐 sécurité : ne pas écraser une DB valide
-        if os.path.exists(DB_PATH):
-            size = os.path.getsize(DB_PATH)
+            r = requests.get(
+                latest["download_url"],
+                timeout=30
+            )
+            r.raise_for_status()
 
-            if size > 10000:  # seuil simple (DB valide)
-                print("⚠️ DB locale déjà valide → restore ignoré")
-                return
+            tmp_restore = DB_PATH + ".restore"
 
-        # 💾 écriture directe (PAS de vérification locale)
-        tmp_restore = DB_PATH + ".restore"
+            with open(tmp_restore, "wb") as f:
+                f.write(r.content)
 
-        with open(tmp_restore, "wb") as f:
-            f.write(r.content)
+            if os.path.getsize(tmp_restore) < 1000:
+                print("❌ Restore invalide : fichier trop petit")
+                os.remove(tmp_restore)
+                return False
 
-        # 🔍 vérification taille minimale
-        if os.path.getsize(tmp_restore) < 1000:
-            print("❌ Restore invalide (fichier trop petit)")
-            os.remove(tmp_restore)
-            return
+            # 🔍 Vérification réelle de la base téléchargée
+            import sqlite3
 
-        # 🔥 remplacement sécurisé
-        os.replace(tmp_restore, DB_PATH)
+            conn = sqlite3.connect(tmp_restore)
+            cursor = conn.cursor()
 
-        print(f"✅ DB restaurée : {latest['name']}")
+            cursor.execute("""
+                SELECT name
+                FROM sqlite_master
+                WHERE type='table' AND name='films'
+            """)
 
-    except Exception as e:
-        print("❌ ERREUR RESTORE :", e)
+            table_films = cursor.fetchone()
+            conn.close()
+
+            if not table_films:
+                print("❌ Restore invalide : table films absente")
+                os.remove(tmp_restore)
+                return False
+
+            # 🔥 remplacement uniquement après validation
+            os.replace(tmp_restore, DB_PATH)
+
+            print(f"✅ DB restaurée et validée : {latest['name']}")
+            return True
+
+        except Exception as e:
+            print(f"⚠️ Tentative {tentative}/3 échouée :", e)
+
+            if tentative < 3:
+                time.sleep(3)
+
+    print("❌ RESTORE impossible après 3 tentatives")
+    return False
+
 
 def init_app():
-    if ENV == "PROD":
-        print("🌐 Mode PROD → vérification DB")
 
-        if not os.path.exists(DB_PATH):
-            print("📥 DB absente → restauration GitHub")
-            restore_db()
-        else:
-            print("✅ DB déjà présente → OK")
-
-    else:
+    if ENV != "PROD":
         print("🧪 Mode DEV → pas de restore")
+        return
+
+    print("🌐 Mode PROD → vérification DB")
+
+    if db_is_valid():
+        print("✅ DB valide → table films présente")
+        return
+
+    print("⚠️ DB absente ou invalide → restauration GitHub")
+
+    success = restore_db()
+
+    if success and db_is_valid():
+        print("✅ Initialisation terminée → DB opérationnelle")
+    else:
+        print("❌ Initialisation impossible → DB non opérationnelle")
+
         
 #💾 🔵 DATABASE
 #08 — SQL CORE
@@ -611,7 +642,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-05-12_11-51-49"
+APP_BUILD = "2026-07-07_22-09-16"
 APP_NOTE = "dev en cours"
 
 
