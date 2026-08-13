@@ -8,6 +8,8 @@ import urllib.parse
 import unicodedata
 import re
 import time
+import hashlib
+import threading
 import html as html_lib
 from datetime import datetime, timedelta
 from openpyxl import Workbook
@@ -28,6 +30,12 @@ DB_PATH = os.path.join(BASE_DIR, "films.db")
 TMP_PATH = os.path.join(BASE_DIR, "backup_temp.db")
 CLEANUP_FILE = os.path.join(BASE_DIR, "last_cleanup.txt")
 LAST_BACKUP_FILE = os.path.join(BASE_DIR, "last_backup.txt")
+
+# Empreinte de la dernière version effectivement envoyée à GitHub.
+# Elle reste volontairement en mémoire : après un redémarrage, un backup
+# supplémentaire est préférable à une modification non sauvegardée.
+last_successful_backup_hash = None
+backup_lock = threading.Lock()
 
 COL = {
     "EMPLACEMENT": 1,
@@ -107,6 +115,23 @@ def should_cleanup():
 
 def mark_cleanup():
     with open(CLEANUP_FILE, "w") as f:
+        f.write(str(time.time()))
+
+
+def get_db_hash(path=DB_PATH):
+    """Retourne l'empreinte SHA-256 du fichier de base indiqué."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as db_file:
+        for chunk in iter(lambda: db_file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def record_successful_backup(db_hash):
+    """Mémorise uniquement une base dont l'envoi GitHub a réussi."""
+    global last_successful_backup_hash
+    last_successful_backup_hash = db_hash
+    with open(LAST_BACKUP_FILE, "w") as f:
         f.write(str(time.time()))
         
 #07 — RESTORE DB
@@ -1725,10 +1750,10 @@ def manual_add():
 #🔁 🔵 SYSTÈME / INFRA
 #29 — BACKUP
 @app.route("/backup_db", methods=["GET", "HEAD"])
-def backup_db():
+def backup_db(force=True):
     if not GITHUB_TOKEN:
         return "❌ GITHUB_TOKEN manquant"
-    
+
     print("🧪 NOUVEAU CLEANUP ACTIF")
 
     import os
@@ -1752,9 +1777,17 @@ def backup_db():
     if not os.path.exists(DB_PATH):
         return "❌ films.db introuvable"
 
+    if not backup_lock.acquire(blocking=False):
+        print("Backup déjà en cours")
+        return "Backup déjà en cours"
+
     print("STEP 2: DB found")
 
     try:
+        if not force and get_db_hash() == last_successful_backup_hash:
+            print("films.db déjà sauvegardée")
+            return "Backup inutile"
+
         # 🔥 1. Sécuriser SQLite
         conn = sqlite3.connect(DB_PATH)
         conn.commit()
@@ -1768,6 +1801,8 @@ def backup_db():
         # 🔥 3. Lire copie
         with open(TMP_PATH, "rb") as f:
             raw = f.read()
+
+        db_hash = get_db_hash(TMP_PATH)
 
         print("STEP 4: DB read OK, size =", len(raw))
 
@@ -1788,7 +1823,7 @@ def backup_db():
             "branch": "main"
         }
 
-        r = requests.put(url, json=data, headers=headers)
+        r = requests.put(url, json=data, headers=headers, timeout=30)
         backup_status = r.status_code
 
         print("STEP 5:", r.status_code, r.text)
@@ -1797,9 +1832,7 @@ def backup_db():
             return f"❌ Backup erreur {r.status_code}"
 
         print(f"✅ Backup créé : {filename}")
-        # 🔥 enregistrer timestamp backup
-        with open(LAST_BACKUP_FILE, "w") as f:
-            f.write(str(time.time()))
+        record_successful_backup(db_hash)
         
         # 🔥 sécurité import
         if os.path.exists(FLAG_PATH):
@@ -1890,8 +1923,11 @@ def backup_db():
         return "❌ Backup crash"
 
     finally:
-        if os.path.exists(TMP_PATH):
-            os.remove(TMP_PATH)
+        try:
+            if os.path.exists(TMP_PATH):
+                os.remove(TMP_PATH)
+        finally:
+            backup_lock.release()
             
 #29B — DOWNLOAD DB
 @app.route("/download_db")
@@ -2085,6 +2121,19 @@ def upload_db():
 #30 — HEALTH
 @app.route("/health")
 def health():
+    if not os.path.exists(DB_PATH):
+        return "OK", 200
+
+    try:
+        current_db_hash = get_db_hash()
+    except Exception as e:
+        print("⚠️ Empreinte films.db impossible :", e)
+        return "OK", 200
+
+    if current_db_hash != last_successful_backup_hash:
+        print("films.db modifiée : backup GitHub déclenché par /health")
+        backup_db(force=False)
+
     return "OK", 200
     
 #31 — STARTUP
