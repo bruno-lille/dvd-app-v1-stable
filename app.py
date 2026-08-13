@@ -598,6 +598,12 @@ def get_style():
         margin-top:12px;
     }
 
+    .action-card {
+        width:85%;
+        max-width:360px;
+        box-sizing:border-box;
+    }
+
     .btn {
         flex:1;
         padding:12px;
@@ -642,7 +648,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-07-07_22-09-16"
+APP_BUILD = "2026-08-13_11-20-15"
 APP_NOTE = "dev en cours"
 
 
@@ -731,10 +737,16 @@ def home():
    
         """
         html += f"""
-        <div class="card" style="position:fixed; bottom:20px; left:10px; right:10px;">
+        <div class="card action-card" style="text-align:center; margin-top:15px; margin-bottom:15px;">
+            <a class="btn update" href="/backup_db"
+               style="display:block; width:100%; height:48px; line-height:48px; padding:0; box-sizing:border-box;">
+                💾 Enregistrer le travail
+            </a>
+        </div>
 
+        <div class="card action-card" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%);">
             <a class="btn allocine" href="/download_all"
-                style="display:block; width:100%; height:48px; margin-bottom:10px; text-align:center;">
+                style="display:block; width:100%; height:48px; margin-bottom:10px; text-align:center; box-sizing:border-box;">
                 💾 Télécharger la base
             </a>
 
@@ -744,13 +756,12 @@ def home():
                        style="display:none;"
                        onchange="confirmUpload(this)">
 
-                <button type="button" class="btn new" style="width:100%; height:48px; margin-bottom:8px;"
+                <button type="button" class="btn new" style="width:100%; height:48px; margin-bottom:0; box-sizing:border-box;"
                     onclick="document.getElementById('fileInput').click()">
                     📂 Restorer la base
                 </button>
 
             </form>
-
         </div>
 
         <script>
