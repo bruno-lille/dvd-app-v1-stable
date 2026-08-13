@@ -673,7 +673,7 @@ nav_buttons = """
 app = Flask(__name__)
 
 APP_VERSION = "V1-dev"
-APP_BUILD = "2026-08-13_17-48-37"
+APP_BUILD = "2026-08-13_19-22-46"
 APP_NOTE = "dev en cours"
 
 
@@ -699,6 +699,10 @@ def home():
     query_raw = request.args.get("q", "").strip()
     mode = request.args.get("mode")
 
+    # Le bouton "Tous les films" ignore volontairement la saisie utilisateur.
+    if mode == "poster":
+        query_raw = ""
+
     exact_mode = False
 
     if query_raw.startswith("(") and query_raw.endswith(")"):
@@ -712,7 +716,7 @@ def home():
     # =========================
     # 🔥 PAGE ACCUEIL
     # =========================
-    if not query:
+    if not query and mode != "poster":
 
         html += f"""
         <div style="
@@ -752,10 +756,12 @@ def home():
 
             <input name="q" id="search" placeholder="Tape un film..." onkeyup="updateCount()">
 
-            <div class="card">
-                <div class="btn-row">
-                    <button class="btn allocine" name="mode" value="fast">🔎 Recherche</button>
-                    <button class="btn new" name="mode" value="poster">🎬 Jaquettes</button>
+            <div class="card action-card">
+                <div class="btn-row" style="flex-direction:column;">
+                    <button class="btn allocine" name="mode" value="fast"
+                            style="width:100%; height:48px; line-height:48px; padding:0; box-sizing:border-box;">🔎 Recherche</button>
+                    <button class="btn new" name="mode" value="poster"
+                            style="width:100%; height:48px; line-height:48px; padding:0; box-sizing:border-box;">🎬 Tous les films</button>
                 </div>
             </div>
         </form>
